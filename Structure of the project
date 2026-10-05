@@ -1,0 +1,28 @@
+                INTERNET USER
+                      |
+                      v
+                 HTTPS Request
+                      |
+                      v
+             AWS EC2 WEB APPLICATION
+                 Python + Flask
+                      |
+                      v
+            LAYER 1: APPLICATION SECURITY
+            - Input validation
+            - Parameterized SQL queries
+            - Authentication
+            - Capability tokens
+                      |
+                      v
+             LAYER 2: DATA SECURITY
+            - Database permissions
+            - AES-256 encryption
+            - Restricted network access
+                      |
+                      v
+              MYSQL DATABASE
+                 Amazon RDS
+                      |
+                      v
+            Encrypted sensitive data
