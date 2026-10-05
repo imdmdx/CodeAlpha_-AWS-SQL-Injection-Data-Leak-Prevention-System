@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Security Dashboard</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}"
+    >
+
+</head>
+
+<body>
+
+<div class="dashboard-container">
+
+    <div class="topbar">
+
+        <div>
+
+            <h1>Security Dashboard</h1>
+
+            <p>
+                Welcome, {{ user.username }}
+            </p>
+
+        </div>
+
+        <a
+            href="{{ url_for('logout') }}"
+            class="logout"
+        >
+            Logout
+        </a>
+
+    </div>
+
+
+    <div class="grid">
+
+
+        <!-- USER INFORMATION -->
+
+        <div class="card">
+
+            <h2>Your Account</h2>
+
+            <div class="info-row">
+
+                <strong>
+                    Username:
+                </strong>
+
+                <span>
+                    {{ user.username }}
+                </span>
+
+            </div>
+
+
+            <div class="info-row">
+
+                <strong>
+                    Email:
+                </strong>
+
+                <span>
+                    {{ user.email }}
+                </span>
+
+            </div>
+
+
+            <div class="info-row">
+
+                <strong>
+                    Phone:
+                </strong>
+
+                <span>
+                    {{ phone if phone else "Not provided" }}
+                </span>
+
+            </div>
+
+
+            <div class="info-row">
+
+                <strong>
+                    Account Created:
+                </strong>
+
+                <span>
+                    {{ user.created_at }}
+                </span>
+
+            </div>
+
+        </div>
+
+
+        <!-- SECURITY INFORMATION -->
+
+        <div class="card">
+
+            <h2>Security Controls</h2>
+
+            <ul class="security-list">
+
+                <li>
+                    ✓ SQLAlchemy parameterized queries
+                </li>
+
+                <li>
+                    ✓ Argon2 password hashing
+                </li>
+
+                <li>
+                    ✓ AES-256-GCM encryption
+                </li>
+
+                <li>
+                    ✓ CSRF protection
+                </li>
+
+                <li>
+                    ✓ Rate limiting
+                </li>
+
+                <li>
+                    ✓ Capability-based authorization
+                </li>
+
+            </ul>
+
+        </div>
+
+
+        <!-- CAPABILITY CODE -->
+
+        <div class="card">
+
+            <h2>Capability Code</h2>
+
+            <p>
+                Generate a short-lived capability code
+                for protected profile access.
+            </p>
+
+            <button
+                onclick="generateCapability()"
+            >
+                Generate Capability
+            </button>
+
+            <div
+                id="capability-result"
+                class="result"
+            ></div>
+
+        </div>
+
+
+        <!-- PROTECTED API -->
+
+        <div class="card">
+
+            <h2>Protected Profile</h2>
+
+            <p>
+                Enter your capability code to access
+                protected information.
+            </p>
+
+            <input
+                type="text"
+                id="capability-code"
+                placeholder="Enter capability code"
+            >
+
+            <button
+                onclick="accessProfile()"
+            >
+                Access Protected Profile
+            </button>
+
+            <pre
+                id="profile-result"
+                class="result"
+            ></pre>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<script>
+
+async function generateCapability() {
+
+    const result =
+        document.getElementById(
+            "capability-result"
+        );
+
+    result.textContent =
+        "Generating capability...";
+
+
+    try {
+
+        const response =
+            await fetch(
+                "{{ url_for('generate_capability') }}",
+                {
+                    method: "POST",
+
+                    headers: {
+                        "X-CSRFToken":
+                            "{{ csrf_token() }}"
+                    }
+                }
+            );
+
+
+        const data =
+            await response.json();
+
+
+        if (!data.success) {
+
+            result.textContent =
+                data.message;
+
+            return;
+        }
+
+
+        result.textContent =
+            "Capability Code:\n\n"
+            + data.capability_code
+            + "\n\n"
+            + data.message;
+
+    }
+
+    catch (error) {
+
+        result.textContent =
+            "Unable to generate capability.";
+
+    }
+
+}
+
+
+async function accessProfile() {
+
+    const code =
+        document.getElementById(
+            "capability-code"
+        ).value.trim();
+
+
+    const result =
+        document.getElementById(
+            "profile-result"
+        );
+
+
+    if (!code) {
+
+        result.textContent =
+            "Enter capability code.";
+
+        return;
+    }
+
+
+    try {
+
+        const response =
+            await fetch(
+                "{{ url_for('secure_profile') }}",
+                {
+                    method: "GET",
+
+                    headers: {
+                        "X-Capability-Code":
+                            code
+                    }
+                }
+            );
+
+
+        const data =
+            await response.json();
+
+
+        result.textContent =
+            JSON.stringify(
+                data,
+                null,
+                2
+            );
+
+    }
+
+    catch (error) {
+
+        result.textContent =
+            "Unable to access protected profile.";
+
+    }
+
+}
+
+</script>
+
+</body>
+
+</html>
